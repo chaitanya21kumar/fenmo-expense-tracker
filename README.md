@@ -1,102 +1,99 @@
-# Expense Tracker — Fenmo SDE Technical Assessment
+# Expense Tracker
 
-A minimal, production-quality full-stack expense tracker.
+A minimal, production-quality personal expense tracking tool built for 
+the Fenmo SDE Technical Assessment.
 
-## Live Demo
-[https://fenmo-pied.vercel.app](https://fenmo-pied.vercel.app)
-[Deployed on Vercel →](https://fenmo-expense-tracker.vercel.app)
+**Live Demo:** https://fenmo-pb7aewgj0-chaitanya-kumars-projects-f0d80eb2.vercel.app  
+**Repository:** https://github.com/chaitanya21kumar/fenmo-expense-tracker
+
+## Features
+- Add expenses with amount, category, description, and date
+- View all expenses sorted by newest first
+- Filter expenses by category
+- See total amount for the currently visible list
+- Category breakdown with percentage summary
+- Handles duplicate submissions via idempotency keys
+- Graceful error and loading states
+- Works correctly after page refresh and on slow networks
 
 ## Tech Stack
-- **Framework**: Next.js 14 (App Router) with TypeScript
-- **Database**: Neon Postgres (serverless) via Prisma ORM
-- **Styling**: Tailwind CSS
-- **Data Fetching**: SWR (stale-while-revalidate)
-- **Validation**: Zod
-- **Testing**: Vitest + Testing Library
-- **Hosting**: Vercel
+| Layer | Choice | Reason |
+|---|---|---|
+| Framework | Next.js 14 (App Router) | Full-stack, Vercel-native, no separate server needed |
+| Language | TypeScript | Type safety reduces bugs in money/data handling |
+| Database | Neon Postgres via Prisma | Serverless-compatible, ACID transactions, free tier |
+| Validation | Zod | Schema-first validation with good error messages |
+| Data Fetching | SWR | Automatic revalidation, deduplication, stale-while-revalidate |
+| Styling | Tailwind CSS | Fast, consistent, no CSS file bloat |
+| Tests | Vitest | Fast, Jest-compatible, works without config in Next.js |
 
 ## Getting Started
 
 ```bash
-# 1. Install dependencies
+git clone https://github.com/chaitanya21kumar/fenmo-expense-tracker
+cd fenmo-expense-tracker
 npm install
-
-# 2. Set up environment variables
 cp .env.example .env
-# Fill in your Neon database URLs
-
-# 3. Run database migrations
-npx prisma migrate dev
-
-# 4. Start the dev server
+# Fill in your Neon database URLs in .env
+npx prisma migrate deploy
 npm run dev
-
-# 5. Run tests
-npm test
 ```
 
-## API
+## API Reference
 
 ### `POST /api/expenses`
-Creates a new expense. Idempotent — safe to retry.
+Creates a new expense. **Idempotent** — safe to retry on network failure.
 
-**Request body:**
 ```json
 {
-  "amount": "150.00",
+  "amount": "150.50",
   "category": "Food",
-  "description": "Lunch at cafe",
-  "date": "2024-01-15",
-  "idempotencyKey": "<uuid-v4>"
+  "description": "Lunch",
+  "date": "2026-04-28",
+  "idempotencyKey": "uuid-v4-generated-client-side"
 }
 ```
 
-### `GET /api/expenses`
-Returns expense list with total.
+Returns `201` on creation, `200` if the same idempotency key already exists.
 
-**Query params:**
-- `?category=Food` — filter by category
-- `?sort=date_desc` — sort newest first
+### `GET /api/expenses?category=Food&sort=date_desc`
+Returns filtered and sorted expense list with total.
+
+```json
+{
+  "expenses": [...],
+  "total": "1250.00",
+  "count": 8
+}
+```
 
 ## Key Design Decisions
 
-### Money Handling
-Amounts are stored as integer paise (1 INR = 100 paise) in the database to
-completely avoid IEEE 754 floating-point rounding issues. The API accepts and
-returns decimal strings (e.g., "150.50"). This is the same approach used by
-Stripe, PayPal, and most serious financial systems.
+### Money as Integer Paise
+Amounts are stored as `INT` in the database representing paise 
+(₹1 = 100 paise). This completely avoids IEEE 754 floating-point 
+rounding errors — the same approach used by Stripe and PayPal. 
+The API accepts and returns human-readable decimal strings.
 
 ### Idempotency
-Each form submission generates a UUID `idempotencyKey` before the first attempt.
-The same key is reused on retries (page refresh, double-click, network retry).
-The backend has a unique constraint on `idempotencyKey`, so duplicate submissions
-are silently deduplicated — the existing record is returned without creating a
-duplicate. The key is regenerated only after a successful submission.
+Each form submission generates a UUID before the first network request.
+The same key is reused on all retries. The backend enforces a unique 
+constraint on `idempotencyKey`, so clicking submit 10 times only creates 
+one expense. A new key is generated only after confirmed success.
 
-### Persistence
-Neon Postgres was chosen over SQLite because Vercel's serverless functions don't
-have a writable filesystem. Neon provides a free serverless Postgres instance with
-connection pooling — it fits this use case perfectly and would scale in production.
+### Serverless-Compatible Database
+SQLite was ruled out because Vercel's serverless functions have no 
+writable filesystem. Neon Postgres provides a free serverless Postgres 
+instance with connection pooling that is purpose-built for this pattern.
 
-### Data Fetching
-SWR is used for client-side fetching with automatic revalidation on window focus,
-meaning the list updates automatically when you switch back to the tab after adding
-an expense elsewhere.
+## Trade-offs Made Due to Timebox
+- No authentication (all expenses are global — single user assumed)
+- No pagination (acceptable for personal use with small datasets)
+- No expense editing or deletion
+- No optimistic UI updates (correctness prioritized over perceived speed)
 
-## Trade-offs (timebox)
-
-- **No authentication**: Not in scope for this assessment; in production, all routes
-  would be behind session-based auth.
-- **No pagination**: With small datasets this is fine; would add cursor-based pagination
-  for production with large expense histories.
-- **No optimistic updates**: Kept the data flow simple and correct; could add optimistic
-  UI updates for snappier feel.
-- **Category management**: Categories are inferred from existing data; a dedicated
-  `Category` table would be cleaner for production.
-
-## Intentionally Not Done
-- User authentication / multi-user support
-- Expense editing or deletion
-- Data export (CSV/PDF)
-- Push notifications or budgets
-- Pagination
+## What I Did Not Do (intentionally)
+- Multi-user support / auth
+- CSV export
+- Budget alerts
+- Mobile app
