@@ -12,7 +12,7 @@ export function useExpenses(category?: string, sort?: string) {
   if (category) params.set('category', category)
   if (sort) params.set('sort', sort)
 
-  const url = `/api/expenses?${params.toString()}`
+  const url = `/expenses?${params.toString()}`
 
   const { data, error, isLoading, mutate } = useSWR<ExpensesResponse>(url, fetcher, {
     revalidateOnFocus: true,

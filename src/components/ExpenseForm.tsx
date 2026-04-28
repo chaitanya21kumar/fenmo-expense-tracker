@@ -17,6 +17,8 @@ interface FormErrors {
 }
 
 const PRESET_CATEGORIES = ['Food', 'Transport', 'Entertainment', 'Health', 'Shopping', 'Utilities', 'Other']
+const MAX_AMOUNT_PAISE = 2_147_483_647
+const MAX_AMOUNT_RUPEES = MAX_AMOUNT_PAISE / 100
 
 export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps) {
   const [amount, setAmount] = useState('')
@@ -41,6 +43,9 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
     }
     if (amount && !/^\d+(\.\d{1,2})?$/.test(amount)) {
       errs.amount = 'At most 2 decimal places allowed'
+    }
+    if (amount && /^\d+(\.\d{1,2})?$/.test(amount) && Math.round(parseFloat(amount) * 100) > MAX_AMOUNT_PAISE) {
+      errs.amount = `Amount must be ₹${MAX_AMOUNT_RUPEES.toLocaleString('en-IN')} or less`
     }
     if (!effectiveCategory.trim()) {
       errs.category = 'Category is required'
@@ -67,7 +72,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
     setSuccessMessage('')
 
     try {
-      const res = await fetch('/api/expenses', {
+      const res = await fetch('/expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -125,7 +130,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
         </div>
       )}
 
-      <div className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         {/* Amount */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -204,13 +209,13 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
         </div>
 
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={isSubmitting}
           className="w-full py-2.5 px-4 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? 'Adding...' : 'Add Expense'}
         </button>
-      </div>
+      </form>
     </div>
   )
 }

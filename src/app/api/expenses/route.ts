@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/prisma'
 import { createExpenseSchema, amountToPaise, paiseToAmount } from '@/lib/validation'
 
@@ -22,8 +23,17 @@ function serializeExpense(expense: {
   }
 }
 
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') ||
+    (error instanceof Error && error.message.includes('Unique constraint'))
+  )
+}
+
 // POST /api/expenses
 export async function POST(request: NextRequest) {
+  let idempotencyKey: string | undefined
+
   try {
     const body = await request.json()
     const parsed = createExpenseSchema.safeParse(body)
@@ -35,7 +45,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { amount, category, description, date, idempotencyKey } = parsed.data
+    const { amount, category, description, date } = parsed.data
+    idempotencyKey = parsed.data.idempotencyKey
 
     // IDEMPOTENCY: if this key already exists, return the existing record (201 already processed)
     const existing = await prisma.expense.findUnique({
@@ -59,19 +70,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(serializeExpense(expense), { status: 201 })
   } catch (error) {
     // Handle race condition: two identical requests at the same millisecond
-    if (
-      error instanceof Error &&
-      error.message.includes('Unique constraint')
-    ) {
-      // Fetch and return the existing record
-      const body = await request.json().catch(() => ({}))
-      if (body.idempotencyKey) {
-        const existing = await prisma.expense.findUnique({
-          where: { idempotencyKey: body.idempotencyKey },
-        })
-        if (existing) return NextResponse.json(serializeExpense(existing), { status: 200 })
-      }
+    if (isUniqueConstraintError(error) && idempotencyKey) {
+      const existing = await prisma.expense.findUnique({
+        where: { idempotencyKey },
+      })
+      if (existing) return NextResponse.json(serializeExpense(existing), { status: 200 })
     }
+
     console.error('POST /api/expenses error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
