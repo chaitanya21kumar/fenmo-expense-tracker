@@ -3,6 +3,7 @@
 A minimal, production-quality full-stack expense tracker.
 
 ## Live Demo
+[https://fenmo-pied.vercel.app](https://fenmo-pied.vercel.app)
 [Deployed on Vercel →](https://fenmo-expense-tracker.vercel.app)
 
 ## Tech Stack
