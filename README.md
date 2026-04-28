@@ -22,7 +22,7 @@ This app lets a user record personal expenses and review where their money is go
 | Basic validation | Done | Shared validation rules with Zod and focused UI errors |
 | Summary view | Done | Category totals and percentages |
 | Loading and error states | Done | Skeleton rows, submit state, network/API error messages |
-| Automated tests | Done | Money conversion and validation tests with Vitest |
+| Automated tests | Done | Money, validation, and API route behavior tests with Vitest |
 
 ## Features
 
@@ -52,7 +52,7 @@ This app lets a user record personal expenses and review where their money is go
 
 ## API Reference
 
-The assessment asks for `/expenses`. This app supports that path, and also keeps `/api/expenses` as a Next.js-compatible internal alias.
+The assessment asks for `/expenses`, so the frontend calls `/expenses` directly. The app also keeps `/api/expenses` as a Next.js-compatible alias.
 
 ### `POST /expenses`
 
@@ -144,7 +144,7 @@ The API accepts human-readable decimal strings like `"150.50"`, but the database
 
 ### Idempotent Create Requests
 
-The frontend generates a UUID before the first submission attempt and reuses it for retries. The backend checks `idempotencyKey` before creating a row, and the database also enforces uniqueness. If a user double-clicks submit or retries after a network failure, only one expense is created.
+The frontend generates a UUID before the first submission attempt and reuses it for retries. The backend checks `idempotencyKey` before creating a row, and the database also enforces uniqueness. If a user double-clicks submit or retries after a network failure, only one expense is created. The API also handles the race where two identical requests reach the create step at nearly the same time.
 
 ### Postgres Instead of Local Files
 
@@ -161,7 +161,9 @@ The interface stays intentionally simple: form, filters, table, total, and categ
 ## Reliability and Edge Cases
 
 - Negative, zero, malformed, and over-precision amounts are rejected.
-- Empty category, description, and date values are rejected.
+- Amounts that exceed the integer-paise database range are rejected before insert.
+- Empty or whitespace-only category, description, and date values are rejected.
+- Impossible calendar dates such as `2024-02-31` are rejected.
 - Slow list loads show skeleton rows.
 - Failed list loads show a clear refreshable error.
 - Failed submissions keep the same idempotency key so retrying remains safe.
@@ -209,8 +211,10 @@ The current automated tests cover:
 - Paise to display amount conversion.
 - Valid expense payloads.
 - Invalid amount, category, description, date, and idempotency payloads.
+- API idempotency behavior when a retry races with the initial create.
+- API filtering, date sorting, and current-list total calculation.
 
-These are the highest-value pure functions for this timebox because money conversion and validation mistakes create the most visible correctness issues.
+These tests target the highest-risk behavior for the assignment: money correctness, request validation, retry safety, filtering, sorting, and totals.
 
 ## Trade-offs Made Due to Timebox
 
@@ -218,7 +222,7 @@ These are the highest-value pure functions for this timebox because money conver
 - No pagination; acceptable for a small personal tracker.
 - No edit/delete flow; creation and review were prioritized.
 - No optimistic UI; confirmed persistence is favored over perceived speed.
-- No full integration test suite; core validation and money behavior are unit-tested.
+- No browser end-to-end suite; the highest-risk API and validation behavior is covered with fast automated tests.
 
 ## Intentionally Not Included
 
