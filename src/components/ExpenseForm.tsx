@@ -138,7 +138,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.amount ? 'border-red-400' : 'border-gray-300'
             }`}
           />
@@ -151,15 +151,15 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white ${
+            className={`w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.category ? 'border-red-400' : 'border-gray-300'
             }`}
           >
-            <option value="">Select a category</option>
+            <option className="text-gray-900" value="">Select a category</option>
             {allCategories.map((cat) => (
-              <option key={cat} value={cat}>{cat}</option>
+              <option className="text-gray-900" key={cat} value={cat}>{cat}</option>
             ))}
-            <option value="__custom__">+ Add custom category</option>
+            <option className="text-gray-900" value="__custom__">+ Add custom category</option>
           </select>
           {category === '__custom__' && (
             <input
@@ -167,7 +167,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
               value={customCategory}
               onChange={(e) => setCustomCategory(e.target.value)}
               placeholder="Enter category name"
-              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           )}
           {errors.category && <p className="mt-1 text-xs text-red-500">{errors.category}</p>}
@@ -182,7 +182,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
             onChange={(e) => setDescription(e.target.value)}
             placeholder="What was this for?"
             maxLength={500}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.description ? 'border-red-400' : 'border-gray-300'
             }`}
           />
@@ -196,7 +196,7 @@ export default function ExpenseForm({ onSuccess, categories }: ExpenseFormProps)
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`w-full px-3 py-2 border rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               errors.date ? 'border-red-400' : 'border-gray-300'
             }`}
           />
