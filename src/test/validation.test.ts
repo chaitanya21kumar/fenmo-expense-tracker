@@ -19,6 +19,16 @@ describe('createExpenseSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects amounts with more than two decimal places', () => {
+    const result = createExpenseSchema.safeParse({ ...validInput, amount: '10.999' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects amounts too large for integer paise storage', () => {
+    const result = createExpenseSchema.safeParse({ ...validInput, amount: '21474836.48' })
+    expect(result.success).toBe(false)
+  })
+
   it('rejects zero amount', () => {
     const result = createExpenseSchema.safeParse({ ...validInput, amount: '0' })
     expect(result.success).toBe(false)
@@ -29,8 +39,18 @@ describe('createExpenseSchema', () => {
     expect(result.success).toBe(false)
   })
 
+  it('rejects whitespace-only category and description', () => {
+    expect(createExpenseSchema.safeParse({ ...validInput, category: '   ' }).success).toBe(false)
+    expect(createExpenseSchema.safeParse({ ...validInput, description: '   ' }).success).toBe(false)
+  })
+
   it('rejects invalid date format', () => {
     const result = createExpenseSchema.safeParse({ ...validInput, date: '15-01-2024' })
+    expect(result.success).toBe(false)
+  })
+
+  it('rejects impossible calendar dates', () => {
+    const result = createExpenseSchema.safeParse({ ...validInput, date: '2024-02-31' })
     expect(result.success).toBe(false)
   })
 
