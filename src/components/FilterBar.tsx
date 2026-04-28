@@ -24,11 +24,11 @@ export default function FilterBar({
         <select
           value={selectedCategory}
           onChange={(e) => onCategoryChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="">All Categories</option>
+          <option className="text-gray-900" value="">All Categories</option>
           {categories.map((cat) => (
-            <option key={cat} value={cat}>{cat}</option>
+            <option className="text-gray-900" key={cat} value={cat}>{cat}</option>
           ))}
         </select>
       </div>
@@ -40,10 +40,10 @@ export default function FilterBar({
         <select
           value={sortOrder}
           onChange={(e) => onSortChange(e.target.value)}
-          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm text-gray-900 bg-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="date_desc">Newest First</option>
-          <option value="">Default</option>
+          <option className="text-gray-900" value="date_desc">Newest First</option>
+          <option className="text-gray-900" value="">Default</option>
         </select>
       </div>
 
